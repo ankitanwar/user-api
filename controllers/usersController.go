@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/ankitanwar/user-api/domain/users"
 	"github.com/ankitanwar/user-api/services"
@@ -40,6 +41,19 @@ func CreateUser(c *gin.Context) {
 
 //GetUser : To get the user from the database
 func GetUser(c *gin.Context) {
+	fmt.Println("Get user function is invoked")
+	userid, userErr := strconv.Atoi(c.Param("user_id"))
+	if userErr != nil {
+		err := errors.NewBadRequest("Enter the valid used id")
+		c.JSON(err.Status, err)
+		return
+	}
+	user, err := services.GetUser(userid)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, user)
 
 }
 
