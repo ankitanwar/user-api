@@ -13,6 +13,8 @@ const (
 	insertUser = "INSERT INTO users(first_name,last_name,email,date_created)VALUES(?,?,?,?) "
 	getUser    = "SELECT id,first_name,last_name,email,date_created FROM users WHERE id=?;"
 	errNoRows  = "no rows in result set"
+	updateUser = "UPDATE users SET first_name=?,last_name=?,email=? WHERE id=?"
+	deleteUser = "DELETE FROM users WHERE id=?"
 )
 
 //Save : To save the user into the database
@@ -56,6 +58,35 @@ func (user *User) Get() *errors.RestError {
 		if strings.Contains(err.Error(), errNoRows) {
 			return errors.NewNotFound(fmt.Sprintf("No user with exist with id %v ", user.ID))
 		}
+		return errors.NewInternalServerError(err.Error())
+	}
+	return nil
+}
+
+//Update : To  update the value of the existing users
+func (user *User) Update() *errors.RestError {
+	stmt, err := userdb.Client.Prepare(updateUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(user.FirstName, user.LastName, user.Email, user.ID)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	return nil
+
+}
+
+//Delete : To delete the user from the database
+func (user *User) Delete() *errors.RestError {
+	stmt, err := userdb.Client.Prepare(deleteUser)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(user.ID)
+	if err != nil {
 		return errors.NewInternalServerError(err.Error())
 	}
 	return nil

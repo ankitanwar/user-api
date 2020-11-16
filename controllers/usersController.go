@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -11,20 +10,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func getUserid(userIDParam string) (int, *errors.RestError) {
+	userID, userErr := strconv.Atoi(userIDParam)
+	if userErr != nil {
+		err := errors.NewBadRequest("Enter the valid used id")
+		return 0, err
+	}
+	return userID, nil
+}
+
 //CreateUser : To create the user
 func CreateUser(c *gin.Context) {
 	var newUser users.User
-	fmt.Print(newUser)
-
-	// bytes, err := ioutil.ReadAll(c.Request.Body)
-	// if err != nil {
-	// 	return
-	// }
-	// if err := json.Unmarshal(bytes, &newUser); err != nil {
-	// 	return
-	// }
-
-	//This line is equal to the comment code above
 	if err := c.ShouldBindJSON(&newUser); err != nil {
 		err := errors.NewBadRequest("Invalid Request")
 		c.JSON(err.Status, err)
@@ -41,11 +38,9 @@ func CreateUser(c *gin.Context) {
 
 //GetUser : To get the user from the database
 func GetUser(c *gin.Context) {
-	fmt.Println("Get user function is invoked")
-	userid, userErr := strconv.Atoi(c.Param("user_id"))
+	userid, userErr := getUserid(c.Param("user_id"))
 	if userErr != nil {
-		err := errors.NewBadRequest("Enter the valid used id")
-		c.JSON(err.Status, err)
+		c.JSON(userErr.Status, userErr)
 		return
 	}
 	user, err := services.GetUser(userid)
@@ -57,7 +52,41 @@ func GetUser(c *gin.Context) {
 
 }
 
-//SearchUser :To search for the particaular user
-func SearchUser(c *gin.Context) {
+//UpdateUser :To Update the value of particaular user
+func UpdateUser(c *gin.Context) {
+	var user = users.User{}
+	userid, userErr := getUserid(c.Param("user_id"))
+	if userErr != nil {
+		c.JSON(userErr.Status, userErr)
+		return
+	}
+	user.ID = userid
+	if err := c.ShouldBindJSON(&user); err != nil {
+		restErr := errors.NewBadRequest("Invalid json body")
+		c.JSON(restErr.Status, restErr)
+		return
+	}
 
+	isPartial := c.Request.Method == http.MethodPatch
+
+	updatedUser, err := services.UpdateUser(isPartial, user)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, updatedUser)
+}
+
+//DeleteUser :To Delete the user with given id
+func DeleteUser(c *gin.Context) {
+	userid, userErr := getUserid(c.Param("user_id"))
+	if userErr != nil {
+		c.JSON(userErr.Status, userErr)
+		return
+	}
+	if err := services.DeleteUser(userid); err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, map[string]string{"Status": "User Deleted"})
 }
