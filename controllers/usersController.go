@@ -28,12 +28,12 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	result, saverr := services.CreateUser(newUser)
+	result, saverr := services.UserServices.CreateUser(newUser)
 	if saverr != nil {
 		c.JSON(saverr.Status, saverr)
 		return
 	}
-	c.JSON(http.StatusCreated, result)
+	c.JSON(http.StatusCreated, result.MarshallUser(c.GetHeader("X-Public") == "true"))
 }
 
 //GetUser : To get the user from the database
@@ -43,12 +43,12 @@ func GetUser(c *gin.Context) {
 		c.JSON(userErr.Status, userErr)
 		return
 	}
-	user, err := services.GetUser(userid)
+	user, err := services.UserServices.GetUser(userid)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, user.MarshallUser(c.GetHeader("X-Public") == "true"))
 
 }
 
@@ -69,12 +69,12 @@ func UpdateUser(c *gin.Context) {
 
 	isPartial := c.Request.Method == http.MethodPatch
 
-	updatedUser, err := services.UpdateUser(isPartial, user)
+	updatedUser, err := services.UserServices.UpdateUser(isPartial, user)
 	if err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
-	c.JSON(http.StatusOK, updatedUser)
+	c.JSON(http.StatusOK, updatedUser.MarshallUser(c.GetHeader("X-Public") == "true"))
 }
 
 //DeleteUser :To Delete the user with given id
@@ -84,9 +84,21 @@ func DeleteUser(c *gin.Context) {
 		c.JSON(userErr.Status, userErr)
 		return
 	}
-	if err := services.DeleteUser(userid); err != nil {
+	if err := services.UserServices.DeleteUser(userid); err != nil {
 		c.JSON(err.Status, err)
 		return
 	}
 	c.JSON(http.StatusOK, map[string]string{"Status": "User Deleted"})
+}
+
+//FindByStatus : To find all the users by given status
+func FindByStatus(c *gin.Context) {
+	status := c.Query("status")
+	users, err := services.UserServices.FindByStatus(status)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, users.MarshallUser(c.GetHeader("X-Public") == "true"))
+
 }

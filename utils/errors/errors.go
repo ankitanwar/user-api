@@ -21,7 +21,7 @@ func NewBadRequest(message string) *RestError {
 	return err
 }
 
-//NewNotFound : it returns an error when request obj is not present in the database or not
+//NewNotFound : It returns an error when request obj is not present in the database
 func NewNotFound(message string) *RestError {
 	err := &RestError{
 		Message: message,

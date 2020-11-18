@@ -6,15 +6,17 @@ import (
 	"time"
 
 	userdb "github.com/ankitanwar/user-api/databasource/postgres"
+	cryptos "github.com/ankitanwar/user-api/utils/cryptoUtils"
 	"github.com/ankitanwar/user-api/utils/errors"
 )
 
 const (
-	insertUser = "INSERT INTO users(first_name,last_name,email,date_created)VALUES(?,?,?,?) "
-	getUser    = "SELECT id,first_name,last_name,email,date_created FROM users WHERE id=?;"
-	errNoRows  = "no rows in result set"
-	updateUser = "UPDATE users SET first_name=?,last_name=?,email=? WHERE id=?"
-	deleteUser = "DELETE FROM users WHERE id=?"
+	insertUser      = "INSERT INTO users(first_name,last_name,email,date_created,status,password)VALUES(?,?,?,?,?,?) "
+	getUser         = "SELECT id,first_name,last_name,email,date_created FROM users WHERE id=?;"
+	errNoRows       = "no rows in result set"
+	updateUser      = "UPDATE users SET first_name=?,last_name=?,email=? WHERE id=?"
+	deleteUser      = "DELETE FROM users WHERE id=?"
+	getUserByStatus = "SELECT id,first_name,last_name,email,date_created FROM users WHERE status=?;"
 )
 
 //Save : To save the user into the database
@@ -26,7 +28,9 @@ func (user *User) Save() *errors.RestError {
 	defer stmt.Close()
 	now := time.Now()
 	user.DateCreated = now.Format("02-01-2006 15:04")
-	insert, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated)
+	user.Password = cryptos.GetMd5(user.Password)
+	user.Status = "Active"
+	insert, err := stmt.Exec(user.FirstName, user.LastName, user.Email, user.DateCreated, user.Status, user.Password)
 
 	// insert, err := stmt.Exec(insertUser, user.FirstName, user.LastName, user.Email, user.DateCreated) we can also do it like this
 
@@ -90,4 +94,29 @@ func (user *User) Delete() *errors.RestError {
 		return errors.NewInternalServerError(err.Error())
 	}
 	return nil
+}
+
+//FindByStatus : To find all the users according to their status
+func (user *User) FindByStatus(status string) ([]User, *errors.RestError) {
+	stmt, err := userdb.Client.Prepare(getUserByStatus)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	rows, err := stmt.Query(status)
+	if err != nil {
+		return nil, errors.NewInternalServerError(err.Error())
+	}
+	defer rows.Close()
+	result := []User{}
+	for rows.Next() {
+		var user User
+		rows.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated)
+		result = append(result, user)
+	}
+
+	if len(result) == 0 {
+		return nil, errors.NewNotFound("No User Found With Status")
+	}
+
+	return result, nil
 }
