@@ -102,3 +102,19 @@ func FindByStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, users.MarshallUser(c.GetHeader("X-Public") == "true"))
 
 }
+
+//Login : to verify user email and password
+func Login(c *gin.Context) {
+	verifyUser := users.LoginRequest{}
+	if err := c.ShouldBindJSON(&verifyUser); err != nil {
+		c.JSON(http.StatusBadRequest, err)
+		return
+	}
+	user, err := services.UserServices.LoginUser(verifyUser)
+	if err != nil {
+		c.JSON(err.Status, err)
+		return
+	}
+	c.JSON(http.StatusOK, user.MarshallUser(c.GetHeader("X-Public") == "true"))
+
+}

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"fmt"
+
 	"github.com/ankitanwar/user-api/domain/users"
 	"github.com/ankitanwar/user-api/utils/errors"
 )
@@ -18,6 +20,7 @@ type userServicesInterface interface {
 	UpdateUser(bool, users.User) (*users.User, *errors.RestError)
 	DeleteUser(int) *errors.RestError
 	FindByStatus(string) (users.Users, *errors.RestError)
+	LoginUser(request users.LoginRequest) (*users.User, *errors.RestError)
 }
 
 //CreateUser : To save the user in the database
@@ -95,4 +98,15 @@ func (u *userServices) FindByStatus(status string) (users.Users, *errors.RestErr
 	}
 	return foundUsers, nil
 
+}
+
+func (u *userServices) LoginUser(request users.LoginRequest) (*users.User, *errors.RestError) {
+	fmt.Println("service", request.Email, request.Password)
+	user := &users.User{}
+	user.Email = request.Email
+	user.Password = request.Password
+	if err := user.GetUserByEmailAndPassword(); err != nil {
+		return nil, err
+	}
+	return user, nil
 }
