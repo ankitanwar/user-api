@@ -11,12 +11,13 @@ import (
 )
 
 const (
-	insertUser      = "INSERT INTO users(first_name,last_name,email,date_created,status,password)VALUES(?,?,?,?,?,?) "
-	getUser         = "SELECT id,first_name,last_name,email,date_created FROM users WHERE id=?;"
-	errNoRows       = "no rows in result set"
-	updateUser      = "UPDATE users SET first_name=?,last_name=?,email=? WHERE id=?"
-	deleteUser      = "DELETE FROM users WHERE id=?"
-	getUserByStatus = "SELECT id,first_name,last_name,email,date_created FROM users WHERE status=?;"
+	insertUser                = "INSERT INTO users(first_name,last_name,email,date_created,status,password)VALUES(?,?,?,?,?,?) "
+	getUser                   = "SELECT id,first_name,last_name,email,date_created FROM users WHERE id=?;"
+	errNoRows                 = "no rows in result set"
+	updateUser                = "UPDATE users SET first_name=?,last_name=?,email=? WHERE id=?"
+	deleteUser                = "DELETE FROM users WHERE id=?"
+	getUserByStatus           = "SELECT id,first_name,last_name,email,date_created FROM users WHERE status=?;"
+	getUserByEmailAndPassword = "SELECT id,first_name,last_name,email,date_created FROM users WHERE email=? AND password=?;"
 )
 
 //Save : To save the user into the database
@@ -119,4 +120,23 @@ func (user *User) FindByStatus(status string) ([]User, *errors.RestError) {
 	}
 
 	return result, nil
+}
+
+// GetUserByEmailAndPassword : To reterive the user by email id and password
+func (user *User) GetUserByEmailAndPassword() *errors.RestError {
+	user.Password = cryptos.GetMd5(user.Password)
+	stmt, err := userdb.Client.Prepare(getUserByEmailAndPassword)
+	if err != nil {
+		return errors.NewInternalServerError(err.Error())
+	}
+	defer stmt.Close()
+	result := stmt.QueryRow(user.Email, user.Password)
+	if err := result.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.DateCreated); err != nil {
+		if strings.Contains(err.Error(), errNoRows) {
+			return errors.NewNotFound(fmt.Sprintf("No user with exist with id %v ", user.ID))
+		}
+		return errors.NewInternalServerError(err.Error())
+	}
+	return nil
+
 }
