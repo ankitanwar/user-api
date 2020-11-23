@@ -3,7 +3,7 @@ package users
 import (
 	"strings"
 
-	"github.com/ankitanwar/user-api/utils/errors"
+	"github.com/ankitanwar/GoAPIUtils/errors"
 )
 
 //User : User and its values

@@ -5,9 +5,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/ankitanwar/GoAPIUtils/errors"
 	userdb "github.com/ankitanwar/user-api/databasource/postgres"
 	cryptos "github.com/ankitanwar/user-api/utils/cryptoUtils"
-	"github.com/ankitanwar/user-api/utils/errors"
 )
 
 const (

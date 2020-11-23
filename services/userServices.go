@@ -3,8 +3,8 @@ package services
 import (
 	"fmt"
 
+	"github.com/ankitanwar/GoAPIUtils/errors"
 	"github.com/ankitanwar/user-api/domain/users"
-	"github.com/ankitanwar/user-api/utils/errors"
 )
 
 var (

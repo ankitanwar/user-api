@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/ankitanwar/GoAPIUtils/errors"
 	"github.com/ankitanwar/user-api/domain/users"
 	"github.com/ankitanwar/user-api/services"
-	"github.com/ankitanwar/user-api/utils/errors"
 	"github.com/gin-gonic/gin"
 )
 
